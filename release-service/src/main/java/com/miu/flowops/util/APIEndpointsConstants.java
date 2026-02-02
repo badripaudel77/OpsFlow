@@ -7,7 +7,7 @@ public class APIEndpointsConstants {
     }
 
     public static final String[] PUBLIC_ENDPOINTS = {
-            "/api/auth/**",
+            "/api/releases/auth/**",
             "/api/public/**",
             "/v3/api-docs/**",
             "/swagger-ui/**",

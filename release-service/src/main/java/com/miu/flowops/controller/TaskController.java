@@ -7,7 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/tasks")
+@RequestMapping("/api/releases/tasks")
 @RequiredArgsConstructor
 public class TaskController {
     private final TaskService taskService;

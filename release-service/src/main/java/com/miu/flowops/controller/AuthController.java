@@ -12,13 +12,18 @@ import org.springframework.web.bind.annotation.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/releases/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+
+    @GetMapping()
+    public String welcome() {
+        return "Welcome to OpsFlow, your ultimate workflow manager. Please Login to access the features.";
+    }
 
     @PostMapping("/register")
     public String register(@RequestBody RegisterRequest request) {
