@@ -1,0 +1,31 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: FlowOps-API Gateway
+
+# any requests matching /api/releases, forward to <host>:8081
+# For ex: http://localhost:8085/api/releases/auth will be forwarded as: http://localhost:8081/api/releases/auth
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: release-service
+              uri: http://localhost:8081
+              predicates:
+              - Path=/api/releases/**
+              filters:
+                - StripPrefix=0 #keep full path when forwarding (also default one)
+
+            - id: notification-service
+              uri: http://localhost:8082
+              predicates:
+              - Path=/api/notifications/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
