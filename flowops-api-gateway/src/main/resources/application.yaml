@@ -7,6 +7,8 @@ spring:
 
 # any requests matching /api/releases, forward to <host>:8081
 # For ex: http://localhost:8085/api/releases/auth will be forwarded as: http://localhost:8081/api/releases/auth
+
+#TODO(Badri): Dawit / David, please add route to your services.
   cloud:
     gateway:
       server:
