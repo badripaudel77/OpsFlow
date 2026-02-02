@@ -1,0 +1,57 @@
+server:
+  port: 8081
+  tomcat:
+    mbeanregistry:
+      enabled: true
+
+spring:
+  application:
+    name: FlowOps
+  kafka:
+    bootstrap-servers: localhost:9094
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
+      group-id: user-event-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      properties:
+        # TODO Change later
+        spring.json.trusted.packages: com.miu.flowops
+        spring.json.value.default.type: com.miu.flowops
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+
+      acks: all
+      retries: 3
+
+  data:
+    mongodb:
+      autoconfigure:
+        exclude:
+          - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+          - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+  mongodb:
+    uri: mongodb://127.0.0.1:27017/flow_ops
+
+# TODO change later
+app:
+  events:
+    topic: test_topic
+
+logging:
+  level:
+    root: info
+    org.springframework.security: debug
+
+# Actuator / prometheus settings
+# Doc : https://docs.spring.io/spring-boot/docs/2.5.6/reference/html/actuator.html
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, beans, info, metrics, mappings, prometheus, threaddump
