@@ -1,0 +1,22 @@
+# Discussion Service - Docker Compose
+# Only includes MongoDB (service's own database)
+# Kafka is shared infrastructure - runs on a separate server
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb-discussion
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=discussion_db
+
+# NOTE: Kafka is NOT included here.
+# In production, Kafka runs as shared infrastructure on a separate server.
+# Configure KAFKA_BOOTSTRAP_SERVERS environment variable when running the service.
+# Example: java -jar app.jar --spring.kafka.bootstrap-servers=kafka-server:9092
+
+volumes:
+  mongodb_data:

@@ -1,0 +1,60 @@
+server:
+  port: 8083
+  tomcat:
+    mbeanregistry:
+      enabled: true
+
+spring:
+  application:
+    name: discussion-service
+
+  # Kafka - connects to shared Kafka cluster (configured via environment variable)
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
+      group-id: discussion-event-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: false
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+
+      acks: all
+      retries: 3
+
+  # MongoDB - service's own database (configured via environment variable)
+  data:
+    mongodb:
+      autoconfigure:
+        exclude:
+          - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+          - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+  mongodb:
+    uri: ${MONGODB_URI:mongodb://localhost:27017/discussion_db}
+
+app:
+  events:
+    topic:
+      discussion-created: discussion-created-topic
+      comment-added: comment-added-topic
+      discussion-resolved: discussion-resolved-topic
+
+logging:
+  level:
+    root: info
+    org.springframework.security: debug
+
+# Actuator / prometheus settings
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, beans, info, metrics, mappings, prometheus, threaddump
