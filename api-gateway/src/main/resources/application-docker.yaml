@@ -1,0 +1,5 @@
+# Docker profile for api-gateway
+logging:
+  level:
+    com.miu.flowops: INFO
+    org.springframework.cloud.gateway: INFO

@@ -1,0 +1,153 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  # Redis disabled - rate limiting not active
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+
+  cloud:
+    gateway:
+      # Global CORS configuration
+      globalcors:
+        corsConfigurations:
+          "[/**]":
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "Authorization"
+            allowCredentials: true
+            maxAge: 3600
+
+      # Default filters applied to all routes
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+      routes:
+        # Auth Service Routes (public endpoints)
+        - id: auth-register
+          uri: ${AUTH_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/auth/register
+            - Method=POST
+
+        - id: auth-login
+          uri: ${AUTH_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/auth/login
+            - Method=POST
+
+        - id: auth-validate
+          uri: ${AUTH_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/auth/validate
+            - Method=POST
+
+        - id: auth-refresh
+          uri: ${AUTH_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/auth/refresh
+            - Method=POST
+
+        # Auth /me endpoint (requires authentication)
+        - id: auth-me
+          uri: ${AUTH_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/auth/me
+            - Method=GET
+          filters:
+            - JwtAuthentication
+
+        # Release Service Routes
+        - id: releases
+          uri: ${RELEASE_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/releases/**
+          filters:
+            - JwtAuthentication
+
+        - id: tasks
+          uri: ${RELEASE_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/tasks/**
+          filters:
+            - JwtAuthentication
+
+        # Activity Stream (SSE) - requires special timeout config
+        - id: activity-stream
+          uri: ${RELEASE_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/activity/**
+          filters:
+            - JwtAuthentication
+          metadata:
+            response-timeout: -1
+
+        # Notification Service Routes (if needed)
+        - id: notifications
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/notifications/**
+          filters:
+            - JwtAuthentication
+
+        # AI Chat Service Routes
+        - id: chat
+          uri: ${CHAT_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/chat/**
+          filters:
+            - JwtAuthentication
+
+        # Forum Service Routes
+        - id: forum-comments
+          uri: ${FORUM_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/v1/comments/**
+          filters:
+            - JwtAuthentication
+
+      # HTTP client configuration for SSE support
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 60000
+        pool:
+          type: elastic
+
+jwt:
+  secret: ${JWT_SECRET:your-super-secret-jwt-key-change-in-production-must-be-at-least-256-bits}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    com.miu.flowops: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG

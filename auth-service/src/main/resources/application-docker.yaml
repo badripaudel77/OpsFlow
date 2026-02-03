@@ -1,0 +1,10 @@
+# Docker profile for auth-service
+spring:
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://admin:password@mongodb:27017/opsflow_auth?authSource=admin}
+
+logging:
+  level:
+    com.miu.flowops: INFO
+    org.springframework.security: WARN
