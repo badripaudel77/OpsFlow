@@ -10,11 +10,21 @@ The system consists of the following services:
 - **Auth Service** (Port 8082) - Authentication and user management
 - **Release Service** (Port 8081) - Release and task workflow management
 - **Notification Service** (Port 8083) - Event-driven notifications
+- **Chatbot Service** (Port 8084) - AI-powered assistant using Ollama (llama3.2:1b)
+- **Ollama** (Port 11434) - Local LLM inference server
 - **MongoDB** (Port 27017) - Primary database
 - **Kafka** (Port 9094) - Event streaming backbone
 - **Kafka UI** (Port 8080) - Kafka management interface
 - **Prometheus** (Port 9090) - Metrics collection
 - **Grafana** (Port 3000) - Monitoring dashboards
+
+## Architecture
+
+![Architecture](_documents/Archtecture.png)
+
+## Entities
+
+![Entities](_documents/EntityDesign.png)
 
 ## 📋 Prerequisites
 
@@ -127,6 +137,9 @@ curl http://localhost:8081/actuator/health
 
 # Notification Service
 curl http://localhost:8083/actuator/health
+
+# Chatbot Service
+curl http://localhost:8084/actuator/health
 ```
 
 ## 🛠️ Development Commands
@@ -209,6 +222,29 @@ POST http://localhost:8085/api/v1/releases
 
 # Get release by ID
 GET http://localhost:8085/api/v1/releases/{id}
+```
+
+### Chatbot Endpoints
+
+```bash
+# Create a new chat session
+POST http://localhost:8085/api/v1/chat/session
+Body: {
+  "userId": "user-123",
+  "releaseId": "release-456"  # Optional
+}
+
+# Send a message to the chatbot
+POST http://localhost:8085/api/v1/chat/{sessionId}/message
+Body: {
+  "message": "What are the pending tasks?"
+}
+
+# Get chat history
+GET http://localhost:8085/api/v1/chat/{sessionId}/history
+
+# Get all user chat sessions
+GET http://localhost:8085/api/v1/chat/sessions?userId={userId}
 ```
 
 ### MongoDB Interaction

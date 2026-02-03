@@ -58,35 +58,35 @@ services:
       - kafka
 
   #  Prometheus and grafana related configuration
-  prometheus:
-    image: prom/prometheus:v3.9.1
-    container_name: prometheus
-    volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - "9090:9090" # access localhost:9090 for promethesu
-    networks:
-      - flowops-net
+  # prometheus:
+  #   image: prom/prometheus:v3.9.1
+  #   container_name: prometheus
+  #   volumes:
+  #     - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+  #   ports:
+  #     - "9090:9090" # access localhost:9090 for promethesu
+  #   networks:
+  #     - flowops-net
 
-  grafana:
-    image: grafana/grafana:12.3.1
-    container_name: grafana
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
-      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      # Bypass the drilldown plugin bug:
-      - GF_FEATURE_TOGGLES_ENABLE=pluginsSriChecks:false
-    depends_on:
-      - prometheus
-    networks:
-      - flowops-net
+  # grafana:
+  #   image: grafana/grafana:12.3.1
+  #   container_name: grafana
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+  #     - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
+  #     - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #     # Bypass the drilldown plugin bug:
+  #     - GF_FEATURE_TOGGLES_ENABLE=pluginsSriChecks:false
+  #   depends_on:
+  #     - prometheus
+  #   networks:
+  #     - flowops-net
 
   auth-service:
     build:
@@ -96,7 +96,7 @@ services:
     ports:
       - "8082:8082"
     environment:
-      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI}
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI:-mongodb://mongodb:27017/flow_ops_db}
       - SERVER_PORT=8082
     depends_on:
       mongodb:
@@ -118,8 +118,8 @@ services:
       - "8081:8081"
     environment:
       - SERVER_PORT=8081
-      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI}
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI:-mongodb://mongodb:27017/flow_ops_db}
       - APP_EVENTS_TOPIC=test_topic
     depends_on:
       mongodb:
@@ -143,7 +143,7 @@ services:
       - "8083:8083"
     environment:
       - SERVER_PORT=8083
-      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI}
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI:-mongodb://mongodb:27017/flow_ops_db}
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=${SPRING_KAFKA_BOOTSTRAP_SERVERS}
       - APP_EVENTS_TOPIC=test_topic
     depends_on:
@@ -159,6 +159,48 @@ services:
       timeout: 10s
       retries: 3
 
+  chatbot-service:
+    build:
+      context: ./chatbot-service
+      dockerfile: Dockerfile
+    container_name: chatbot-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SERVER_PORT=8084
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI:-mongodb://mongodb:27017/flow_ops_db}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OLLAMA_MODEL=llama3.2:1b
+      - OLLAMA_TIMEOUT=30
+      - OLLAMA_MAX_RETRIES=2
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    networks:
+      - flowops-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - flowops-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:11434/api/tags || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   api-gateway:
     build:
       context: ./api-gateway
@@ -168,13 +210,15 @@ services:
       - "8085:8085"
     environment:
       - SERVER_PORT=8085
-      - RELEASE_SERVICE_URL=${RELEASE_SERVICE_URL}
-      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
-      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL}
+      - RELEASE_SERVICE_URL=${RELEASE_SERVICE_URL:-http://release-service:8081}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-http://auth-service:8082}
+      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-http://notification-service:8083}
+      - CHATBOT_SERVICE_URL=${CHATBOT_SERVICE_URL:-http://chatbot-service:8084}
     depends_on:
       - auth-service
       - release-service
       - notification-service
+      - chatbot-service
     networks:
       - flowops-net
     healthcheck:
@@ -189,3 +233,4 @@ networks:
 
 volumes:
   mongodb-data:
+  ollama-data:

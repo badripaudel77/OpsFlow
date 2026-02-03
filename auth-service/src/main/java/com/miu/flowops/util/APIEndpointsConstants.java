@@ -7,15 +7,15 @@ public class APIEndpointsConstants {
     }
 
     public static final String[] PUBLIC_ENDPOINTS = {
-            "/api/auth/**",
-            "/api/public/**",
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
-            "/actuator/**"
+            "/auth/**",           // Gateway strips /api/v1, so service receives /auth/**
+            "/actuator/**",       // Health checks and metrics
+            "/v3/api-docs/**",    // API documentation
+            "/swagger-ui/**"      // Swagger UI
     };
 
     public static final String[] ADMIN_ONLY_ENDPOINTS = {
-            "/api/releases/**"
+            // Auth service doesn't handle releases
+            // Remove this or leave empty
     };
 }
 
