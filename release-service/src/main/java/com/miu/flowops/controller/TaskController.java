@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/releases/tasks")
+@RequestMapping("/releases/tasks")
 @RequiredArgsConstructor
 public class TaskController {
     private final TaskService taskService;
