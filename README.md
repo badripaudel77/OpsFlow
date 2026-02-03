@@ -228,27 +228,6 @@ DELETE /api/chat/{sessionId}              [DEVELOPER] - clear session
 - Store comment metadata (author, timestamp, parent)
 - Validate user permissions (can only comment on assigned/visible tasks)
 
-**Data Structure**:
-
-```
-Comment {
-  id: String
-  taskId: String
-  userId: String (author)
-  content: String
-  parentCommentId: String (null for root comments)
-  createdAt: Timestamp
-  updatedAt: Timestamp
-  replies: List<Comment> (computed/aggregated)
-}
-```
-
-**Threading Logic**:
-
-- Root comments: `parentCommentId = null`
-- Replies: `parentCommentId = {commentId}`
-- Fetch logic: recursive or aggregation pipeline
-
 **REST Endpoints**:
 
 ```
@@ -257,25 +236,6 @@ POST /api/comments/{commentId}/reply       [DEVELOPER] - reply to comment
 GET  /api/comments/task/{taskId}           [DEVELOPER] - get all (nested)
 PATCH /api/comments/{commentId}            [DEVELOPER] - edit own comment
 DELETE /api/comments/{commentId}           [DEVELOPER] - delete own comment
-```
-
-**MongoDB Aggregation for Nested Comments**:
-
-```javascript
-// Recursive lookup for building thread tree
-db.comments.aggregate([
-  { $match: { taskId: "task123", parentCommentId: null } },
-  {
-    $graphLookup: {
-      from: "comments",
-      startWith: "$_id",
-      connectFromField: "_id",
-      connectToField: "parentCommentId",
-      as: "replies",
-      maxDepth: 10,
-    },
-  },
-]);
 ```
 
 ---
@@ -349,22 +309,14 @@ POST /auth/refresh     - Refresh expired token
 
 ### Security Implementation Details
 
-**1. Password Security**:
-
-```java
-// BCrypt hashing with salt rounds = 12
-String hashedPassword = BCryptPasswordEncoder.encode(rawPassword);
-boolean matches = BCryptPasswordEncoder.matches(rawPassword, hashedPassword);
-```
-
-**2. JWT Configuration**:
+**1. JWT Configuration**:
 
 - Algorithm: HS256 (HMAC-SHA256)
 - Secret: Stored in environment variable
 - Expiration: 24 hours (configurable)
 - Refresh token: 7 days (optional)
 
-**3. Role-Based Access Control**:
+**2. Role-Based Access Control**:
 
 | Endpoint                      | ADMIN | DEVELOPER      |
 | ----------------------------- | ----- | -------------- |
@@ -378,172 +330,6 @@ boolean matches = BCryptPasswordEncoder.matches(rawPassword, hashedPassword);
 | POST /comments/{taskId}       | ❌    | ✅             |
 | GET /activity/stream          | ✅    | ✅             |
 | POST /chat/session            | ❌    | ✅             |
-
----
-
-## Event-Driven Architecture
-
-### Kafka Event Flow
-
-![ Kafka Event Flow](documents/Kafka.png)
-
-### Event Schemas
-
-**1. TaskAssignedEvent**:
-
-```json
-{
-  "eventType": "TASK_ASSIGNED",
-  "eventId": "uuid",
-  "timestamp": "2026-02-02T10:30:00Z",
-  "payload": {
-    "taskId": "task123",
-    "taskTitle": "Implement authentication",
-    "releaseId": "release456",
-    "releaseName": "Sprint 23 Release",
-    "developerId": "dev789",
-    "developerEmail": "john@example.com",
-    "orderIndex": 3,
-    "status": "TODO"
-  }
-}
-```
-
-**2. HotfixTaskAddedEvent**:
-
-```json
-{
-  "eventType": "HOTFIX_TASK_ADDED",
-  "eventId": "uuid",
-  "timestamp": "2026-02-02T14:20:00Z",
-  "payload": {
-    "taskId": "task999",
-    "taskTitle": "URGENT: Fix login bug",
-    "releaseId": "release456",
-    "releaseName": "Sprint 23 Release",
-    "developerId": "dev789",
-    "developerEmail": "john@example.com",
-    "isReleaseReopened": true,
-    "priority": "CRITICAL"
-  }
-}
-```
-
-**3. StaleTaskDetectedEvent**:
-
-```json
-{
-  "eventType": "STALE_TASK_DETECTED",
-  "eventId": "uuid",
-  "timestamp": "2026-02-02T09:00:00Z",
-  "payload": {
-    "taskId": "task555",
-    "taskTitle": "Design database schema",
-    "developerId": "dev123",
-    "developerEmail": "alice@example.com",
-    "startedAt": "2026-01-29T10:00:00Z",
-    "hoursSinceStarted": 50,
-    "releaseId": "release789",
-    "releaseName": "Sprint 24 Release"
-  }
-}
-```
-
-**4. TaskCompletedEvent**:
-
-```json
-{
-  "eventType": "TASK_COMPLETED",
-  "eventId": "uuid",
-  "timestamp": "2026-02-02T11:45:00Z",
-  "payload": {
-    "taskId": "task222",
-    "taskTitle": "Write unit tests",
-    "releaseId": "release456",
-    "developerId": "dev789",
-    "completedAt": "2026-02-02T11:45:00Z",
-    "nextTaskId": "task223",
-    "nextTaskDeveloperId": "dev456"
-  }
-}
-```
-
-**5. SystemErrorEvent**:
-
-```json
-{
-  "eventType": "SYSTEM_ERROR",
-  "eventId": "uuid",
-  "timestamp": "2026-02-02T15:30:00Z",
-  "payload": {
-    "serviceName": "ReleaseService",
-    "errorType": "DATABASE_CONNECTION_FAILED",
-    "errorMessage": "Connection to MongoDB timeout after 30s",
-    "stackTrace": "...",
-    "severity": "CRITICAL",
-    "affectedEndpoint": "/api/releases"
-  }
-}
-```
-
-### Kafka Configuration
-
-**Topic Configuration**:
-
-```yaml
-Topics:
-  - name: task-events
-    partitions: 3
-    replication-factor: 1
-    retention-ms: 604800000 # 7 days
-
-  - name: hotfix-events
-    partitions: 2
-    replication-factor: 1
-    retention-ms: 2592000000 # 30 days
-
-  - name: stale-task-events
-    partitions: 1
-    replication-factor: 1
-
-  - name: system-error-events
-    partitions: 1
-    replication-factor: 1
-
-  - name: retry-topic
-    partitions: 1
-    replication-factor: 1
-    retention-ms: 86400000 # 1 day
-
-  - name: dead-letter-queue
-    partitions: 1
-    replication-factor: 1
-    retention-ms: 2592000000 # 30 days
-```
-
-**2. Retry Logic**:
-
-```java
-@Retryable(
-    value = {TransientException.class},
-    maxAttempts = 3,
-    backoff = @Backoff(delay = 2000, multiplier = 2)
-)
-public void sendEmail(NotificationEvent event) {
-    // SMTP call
-}
-```
-
-**3. Dead Letter Queue Handler**:
-
-```java
-@KafkaListener(topics = "dead-letter-queue")
-public void handleDLQ(GenericEvent event) {
-    log.error("Event failed permanently: {}", event);
-    alertService.notifyAdmin("DLQ event", event);
-    // Store in database for manual inspection
-}
-```
 
 ---
 
@@ -720,26 +506,7 @@ public void handleDLQ(GenericEvent event) {
 
 ![Entity Relationships](documents/EntityDiagram.png)
 
-## Deployment Strategy
-
-### Docker Compose Configuration
-
-### Environment Variables (.env file)
-
-```env
-# JWT
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
-
-# Email
-EMAIL_USERNAME=your-email@gmail.com
-EMAIL_PASSWORD=your-app-specific-password
-
-# Database
-MONGO_ROOT_USERNAME=admin
-MONGO_ROOT_PASSWORD=password
-```
-
-### Deployment Commands
+### Run Commands
 
 ```bash
 # Build and start all services
@@ -773,15 +540,6 @@ http://localhost:8083/actuator/health  (AI Chat Service)
 http://localhost:8084/actuator/health  (Forum Service)
 http://localhost:8085/actuator/health  (Auth Service)
 ```
-
-### Access URLs
-
-- **API Gateway**: http://localhost:8080
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **Prometheus**: http://localhost:9090
-- **MongoDB**: mongodb://localhost:27017
-
----
 
 ## Summary
 
