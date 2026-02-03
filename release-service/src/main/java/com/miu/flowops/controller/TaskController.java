@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 public class TaskController {
     private final TaskService taskService;
 
-    // @PreAuthorize("hasRole('DEVELOPER')")
+
     @PostMapping("/{releaseId}/devs/{developerId}/start/{taskId}")
     public ResponseEntity<String> startTask(@PathVariable String releaseId,
                                             @PathVariable String developerId,
@@ -21,7 +21,6 @@ public class TaskController {
         return ResponseEntity.ok("Task started successfully");
     }
 
-    // @PreAuthorize("hasAnyRole('ADMIN','DEVELOPER')")
     @PostMapping("/{releaseId}/devs/{developerId}/complete/{taskId}")
     public ResponseEntity<String> completeTask(@PathVariable String releaseId,
                                                @PathVariable String developerId,
