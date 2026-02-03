@@ -1,6 +1,7 @@
 package com.miu.flowops.security;
 
 import com.miu.flowops.util.APIEndpointsConstants;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,8 +18,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
-
-import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
