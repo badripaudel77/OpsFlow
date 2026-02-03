@@ -34,6 +34,13 @@ spring:
               filters:
                 - StripPrefix=2
 
+            - id: chatbot-service
+              uri: ${CHATBOT_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/v1/chat/**
+              filters:
+                - StripPrefix=2
+
 management:
   endpoints:
     web:

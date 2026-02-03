@@ -1,0 +1,33 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: chatbot-service
+
+  mongodb:
+    uri: mongodb://127.0.0.1:27017/flow_ops_db
+
+ollama:
+  base-url: http://localhost:11434
+  model: llama3.2:1b
+  timeout: 30000 # 30 seconds
+  retry:
+    max-attempts: 2
+    delay: 1000 # 1 second
+
+chat:
+  context:
+    max-messages: 5 # Last N messages for context
+
+logging:
+  level:
+    root: info
+    org.springframework.security: debug
+    com.miu.flowops: debug
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus

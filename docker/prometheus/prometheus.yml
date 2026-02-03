@@ -30,3 +30,10 @@ scrape_configs:
       - targets: ["api-gateway:8085"]
         labels:
           service: "api-gateway"
+
+  - job_name: "chatbot-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["chatbot-service:8084"]
+        labels:
+          service: "chatbot-service"
