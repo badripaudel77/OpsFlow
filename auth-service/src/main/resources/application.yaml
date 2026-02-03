@@ -6,12 +6,15 @@ spring:
     name: auth-service
 
   mongodb:
-    uri: ${SPRING_DATA_MONGODB_URI}
+    uri: ${SPRING_DATA_MONGODB_URI:mongodb://127.0.0.1:27017/flow_ops}
 
 logging:
   level:
     root: info
     org.springframework.security: debug
+
+opsflow:
+  JWT_SECRET: ${JWT_SECRET:YOURVALIDKEY}
 
 management:
   endpoints:

@@ -40,7 +40,9 @@ spring:
                 - Path=/api/v1/chat/**
               filters:
                 - StripPrefix=2
-
+opsflow:
+  JWT_SECRET: ${JWT_SECRET:INVALID}
+  
 management:
   endpoints:
     web:

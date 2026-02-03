@@ -4,6 +4,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -14,7 +15,8 @@ import java.util.Set;
 @Component
 public class JwtUtil {
     @Getter
-    private String secret = "flowopsSecretKeykeepthisverylongandsecretforsecuritypurposeotherwisepeoplewillstealit";
+    @Value("${opsflow.JWT_SECRET}")
+    private String secret;
     private long accessTokenValidityMs = 3600_000;
 
     private Key getSigningKey() {
