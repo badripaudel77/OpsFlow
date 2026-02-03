@@ -5,7 +5,7 @@ services:
     ports:
       - "27017:27017"
     environment:
-      - MONGO_INITDB_DATABASE=flow_ops
+      - MONGO_INITDB_DATABASE=flow_ops_db
     volumes:
       - mongodb-data:/data/db
     networks:
@@ -96,7 +96,7 @@ services:
     ports:
       - "8082:8082"
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/flow_ops
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI}
       - SERVER_PORT=8082
     depends_on:
       mongodb:
@@ -118,8 +118,8 @@ services:
       - "8081:8081"
     environment:
       - SERVER_PORT=8081
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/flow_ops
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI}
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=${SPRING_KAFKA_BOOTSTRAP_SERVERS}
       - APP_EVENTS_TOPIC=test_topic
     depends_on:
       mongodb:
@@ -143,8 +143,8 @@ services:
       - "8083:8083"
     environment:
       - SERVER_PORT=8083
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/flow_ops
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI}
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=${SPRING_KAFKA_BOOTSTRAP_SERVERS}
       - APP_EVENTS_TOPIC=test_topic
     depends_on:
       mongodb:
@@ -168,9 +168,9 @@ services:
       - "8085:8085"
     environment:
       - SERVER_PORT=8085
-      - RELEASE_SERVICE_URL=http://release-service:8081
-      - AUTH_SERVICE_URL=http://auth-service:8082
-      - NOTIFICATION_SERVICE_URL=http://notification-service:8083
+      - RELEASE_SERVICE_URL=${RELEASE_SERVICE_URL}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL}
     depends_on:
       - auth-service
       - release-service
