@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.miu.flowops</groupId>
-	<artifactId>flowops-api-gateway</artifactId>
+	<artifactId>api-gateway</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>FlowOps - API Gateway</name>
 	<description>FlowOps Final Project - API Gateway</description>

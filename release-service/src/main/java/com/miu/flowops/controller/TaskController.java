@@ -3,7 +3,6 @@ package com.miu.flowops.controller;
 import com.miu.flowops.service.impl.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -12,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 public class TaskController {
     private final TaskService taskService;
 
-    @PreAuthorize("hasRole('DEVELOPER')")
+    // @PreAuthorize("hasRole('DEVELOPER')")
     @PostMapping("/{releaseId}/devs/{developerId}/start/{taskId}")
     public ResponseEntity<String> startTask(@PathVariable String releaseId,
                                             @PathVariable String developerId,
@@ -22,7 +21,7 @@ public class TaskController {
         return ResponseEntity.ok("Task started successfully");
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','DEVELOPER')")
+    // @PreAuthorize("hasAnyRole('ADMIN','DEVELOPER')")
     @PostMapping("/{releaseId}/devs/{developerId}/complete/{taskId}")
     public ResponseEntity<String> completeTask(@PathVariable String releaseId,
                                                @PathVariable String developerId,
