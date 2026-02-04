@@ -9,8 +9,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Document(collection = "tasks")
 public class TaskContextDTO {
     
+    @Id
     private String id;
     
     private String title;
@@ -21,12 +23,7 @@ public class TaskContextDTO {
     
     private String releaseId;
     
-    private String developerId;
+    private String assignedTo;
     
     private Integer orderIndex;
-    
-    // For backward compatibility with service layer
-    public String getAssignedTo() {
-        return developerId;
-    }
 }

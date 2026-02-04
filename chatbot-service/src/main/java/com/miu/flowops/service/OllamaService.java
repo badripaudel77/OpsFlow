@@ -1,22 +1,16 @@
 package com.miu.flowops.service;
 
 import com.miu.flowops.config.OllamaConfig;
-import io.netty.channel.ChannelOption;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.client.HttpClient;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -28,18 +22,8 @@ public class OllamaService {
     
     public OllamaService(OllamaConfig config) {
         this.config = config;
-        
-        // Configure HttpClient with timeouts
-        HttpClient httpClient = HttpClient.create()
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getTimeout())
-                .responseTimeout(Duration.ofMillis(config.getTimeout()))
-                .doOnConnected(conn -> 
-                    conn.addHandlerLast(new ReadTimeoutHandler(config.getTimeout(), TimeUnit.MILLISECONDS))
-                        .addHandlerLast(new WriteTimeoutHandler(config.getTimeout(), TimeUnit.MILLISECONDS)));
-        
         this.webClient = WebClient.builder()
                 .baseUrl(config.getBaseUrl())
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
     }
     

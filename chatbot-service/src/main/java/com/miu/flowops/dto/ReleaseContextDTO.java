@@ -17,34 +17,13 @@ public class ReleaseContextDTO {
     @Id
     private String id;
     
-    private String title;
+    private String name;
     
-    private Boolean isCompleted;
+    private String description;
     
-    private List<EmbeddedTask> tasks;
+    private String status;
     
-    // For backward compatibility
-    public String getName() {
-        return title;
-    }
+    private boolean completed;
     
-    public boolean isCompleted() {
-        return Boolean.TRUE.equals(isCompleted);
-    }
-    
-    public String getStatus() {
-        return Boolean.TRUE.equals(isCompleted) ? "COMPLETED" : "IN_PROGRESS";
-    }
-    
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class EmbeddedTask {
-        private String id;
-        private String title;
-        private String description;
-        private String status;
-        private String developerId;
-        private Integer orderIndex;
-    }
+    private List<String> taskIds;
 }

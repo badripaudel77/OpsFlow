@@ -8,7 +8,6 @@ services:
       - MONGO_INITDB_DATABASE=flow_ops_db
     volumes:
       - mongodb-data:/data/db
-      - ./docker/mongo:/docker-entrypoint-initdb.d:ro
     networks:
       - flowops-net
     healthcheck:
@@ -16,23 +15,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  mongo-express:
-    image: mongo-express:latest
-    container_name: mongo-express
-    ports:
-      - "8888:8081"
-    environment:
-      - ME_CONFIG_MONGODB_SERVER=mongodb
-      - ME_CONFIG_MONGODB_PORT=27017
-      - ME_CONFIG_BASICAUTH_USERNAME=admin
-      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    networks:
-      - flowops-net
-    restart: unless-stopped
 
   kafka:
     image: apache/kafka:4.1.1
@@ -76,35 +58,35 @@ services:
       - kafka
 
   #  Prometheus and grafana related configuration
-  prometheus:
-    image: prom/prometheus:v3.9.1
-    container_name: prometheus
-    volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - "9090:9090" # access localhost:9090 for promethesu
-    networks:
-      - flowops-net
+  # prometheus:
+  #   image: prom/prometheus:v3.9.1
+  #   container_name: prometheus
+  #   volumes:
+  #     - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+  #   ports:
+  #     - "9090:9090" # access localhost:9090 for promethesu
+  #   networks:
+  #     - flowops-net
 
-  grafana:
-    image: grafana/grafana:12.3.1
-    container_name: grafana
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
-      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      # Bypass the drilldown plugin bug:
-      - GF_FEATURE_TOGGLES_ENABLE=pluginsSriChecks:false
-    depends_on:
-      - prometheus
-    networks:
-      - flowops-net
+  # grafana:
+  #   image: grafana/grafana:12.3.1
+  #   container_name: grafana
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+  #     - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
+  #     - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #     # Bypass the drilldown plugin bug:
+  #     - GF_FEATURE_TOGGLES_ENABLE=pluginsSriChecks:false
+  #   depends_on:
+  #     - prometheus
+  #   networks:
+  #     - flowops-net
 
   auth-service:
     build:
@@ -116,7 +98,6 @@ services:
     environment:
       - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI:-mongodb://mongodb:27017/flow_ops_db}
       - SERVER_PORT=8082
-      - JWT_SECRET=${JWT_SECRET:-INVALID}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -190,7 +171,7 @@ services:
       - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI:-mongodb://mongodb:27017/flow_ops_db}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
       - OLLAMA_MODEL=llama3.2:1b
-      - OLLAMA_TIMEOUT=120000
+      - OLLAMA_TIMEOUT=30
       - OLLAMA_MAX_RETRIES=2
     depends_on:
       mongodb:
@@ -233,7 +214,6 @@ services:
       - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-http://auth-service:8082}
       - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-http://notification-service:8083}
       - CHATBOT_SERVICE_URL=${CHATBOT_SERVICE_URL:-http://chatbot-service:8084}
-      - JWT_SECRET=${JWT_SECRET:-INVALID}
     depends_on:
       - auth-service
       - release-service
