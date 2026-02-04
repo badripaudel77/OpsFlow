@@ -27,8 +27,9 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
 
       properties:
-        spring.json.trusted.packages: com.miu.flowops
-        spring.json.value.default.type: com.miu.flowops
+#        TODO: check these later
+#        spring.json.trusted.packages: com.miu.flowops
+#        spring.json.value.default.type: com.miu.flowops
         enable.idempotence: true
         max.in.flight.requests.per.connection: 5
 
