@@ -9,7 +9,7 @@ import java.util.List;
 @Repository
 public interface ReleaseContextRepository extends MongoRepository<ReleaseContextDTO, String> {
     
-    List<ReleaseContextDTO> findByCompletedFalse();
+    List<ReleaseContextDTO> findByIsCompletedFalse();
     
-    List<ReleaseContextDTO> findByStatus(String status);
+    List<ReleaseContextDTO> findByIsCompletedTrue();
 }
