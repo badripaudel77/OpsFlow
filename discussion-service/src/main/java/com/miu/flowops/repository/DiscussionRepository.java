@@ -29,4 +29,6 @@ public interface DiscussionRepository extends MongoRepository<Discussion, String
     long countByReleaseIdAndStatus(String releaseId, DiscussionStatus status);
     
     long countByTaskIdAndStatus(String taskId, DiscussionStatus status);
+    
+    List<Discussion> findAllByOrderByCreatedAtDesc();
 }

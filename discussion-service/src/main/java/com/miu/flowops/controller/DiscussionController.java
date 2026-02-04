@@ -12,11 +12,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/discussions")
+@RequestMapping("/discussions")
 @RequiredArgsConstructor
 public class DiscussionController {
 
     private final DiscussionService discussionService;
+
+    /**
+     * Get all discussions without comments (summary view)
+     */
+    @GetMapping
+    public ResponseEntity<List<DiscussionSummary>> getAllDiscussions() {
+        return ResponseEntity.ok(discussionService.getAllDiscussions());
+    }
 
     @PostMapping
     public ResponseEntity<Discussion> createDiscussion(@RequestBody CreateDiscussionRequest request) {

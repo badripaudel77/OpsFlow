@@ -3,9 +3,7 @@ package com.miu.flowops.service.impl;
 import com.miu.flowops.dto.*;
 import com.miu.flowops.model.Discussion;
 import com.miu.flowops.model.DiscussionStatus;
-import com.miu.flowops.model.User;
 import com.miu.flowops.repository.DiscussionRepository;
-import com.miu.flowops.repository.UserRepository;
 import com.miu.flowops.service.IDiscussionService;
 import com.miu.flowops.service.KafkaProducerService;
 import lombok.RequiredArgsConstructor;
@@ -22,19 +20,20 @@ import java.util.List;
 public class DiscussionService implements IDiscussionService {
 
     private final DiscussionRepository discussionRepository;
-    private final UserRepository userRepository;
     private final KafkaProducerService kafkaProducerService;
 
     @Override
     public Discussion createDiscussion(CreateDiscussionRequest request) {
-        User author = userRepository.findById(request.getAuthorId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // Use authorId and authorName directly from request - no user lookup needed
+        // User validation is handled by API Gateway JWT authentication
+        String authorId = request.getAuthorId();
+        String authorName = request.getAuthorName() != null ? request.getAuthorName() : "Unknown User";
 
         Discussion discussion = Discussion.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
-                .authorId(author.getId())
-                .authorName(author.getFullName())
+                .authorId(authorId)
+                .authorName(authorName)
                 .releaseId(request.getReleaseId())
                 .taskId(request.getTaskId())
                 .type(request.getType())
@@ -50,8 +49,8 @@ public class DiscussionService implements IDiscussionService {
         kafkaProducerService.sendDiscussionCreatedEvent(DiscussionCreatedEvent.builder()
                 .discussionId(savedDiscussion.getId())
                 .title(savedDiscussion.getTitle())
-                .authorId(author.getId())
-                .authorName(author.getFullName())
+                .authorId(authorId)
+                .authorName(authorName)
                 .releaseId(savedDiscussion.getReleaseId())
                 .taskId(savedDiscussion.getTaskId())
                 .type(savedDiscussion.getType().name())
@@ -110,6 +109,48 @@ public class DiscussionService implements IDiscussionService {
         log.info("Discussion deleted with ID: {}", discussionId);
     }
 
+    /**
+     * Get all discussions without comments (summary view)
+     */
+    public List<DiscussionSummary> getAllDiscussions() {
+        return discussionRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(this::toSummary)
+                .toList();
+    }
+
+    private DiscussionSummary toSummary(Discussion discussion) {
+        return DiscussionSummary.builder()
+                .id(discussion.getId())
+                .title(discussion.getTitle())
+                .content(discussion.getContent())
+                .authorId(discussion.getAuthorId())
+                .authorName(discussion.getAuthorName())
+                .releaseId(discussion.getReleaseId())
+                .taskId(discussion.getTaskId())
+                .status(discussion.getStatus())
+                .type(discussion.getType())
+                .commentCount(countAllComments(discussion.getComments()))
+                .createdAt(discussion.getCreatedAt())
+                .updatedAt(discussion.getUpdatedAt())
+                .resolvedAt(discussion.getResolvedAt())
+                .resolvedBy(discussion.getResolvedBy())
+                .build();
+    }
+
+    private int countAllComments(List<com.miu.flowops.model.Comment> comments) {
+        if (comments == null || comments.isEmpty()) {
+            return 0;
+        }
+        int count = comments.size();
+        for (com.miu.flowops.model.Comment comment : comments) {
+            if (comment.getReplies() != null) {
+                count += countAllComments(comment.getReplies());
+            }
+        }
+        return count;
+    }
+
     @Override
     public List<Discussion> getDiscussionsByRelease(String releaseId) {
         return discussionRepository.findByReleaseIdOrderByCreatedAtDesc(releaseId);
@@ -133,8 +174,6 @@ public class DiscussionService implements IDiscussionService {
     @Override
     public Discussion resolveDiscussion(String discussionId, String userId) {
         Discussion discussion = getDiscussion(discussionId);
-        User resolver = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (discussion.getStatus() == DiscussionStatus.RESOLVED) {
             throw new RuntimeException("Discussion is already resolved");
@@ -142,7 +181,7 @@ public class DiscussionService implements IDiscussionService {
 
         discussion.setStatus(DiscussionStatus.RESOLVED);
         discussion.setResolvedAt(LocalDateTime.now());
-        discussion.setResolvedBy(resolver.getFullName());
+        discussion.setResolvedBy(userId);  // Use userId directly
         discussion.setUpdatedAt(LocalDateTime.now());
 
         Discussion savedDiscussion = discussionRepository.save(discussion);
@@ -152,7 +191,7 @@ public class DiscussionService implements IDiscussionService {
                 .discussionId(savedDiscussion.getId())
                 .title(savedDiscussion.getTitle())
                 .resolvedById(userId)
-                .resolvedByName(resolver.getFullName())
+                .resolvedByName(userId)  // Use userId as name
                 .authorId(savedDiscussion.getAuthorId())
                 .releaseId(savedDiscussion.getReleaseId())
                 .taskId(savedDiscussion.getTaskId())

@@ -1,5 +1,5 @@
 server:
-  port: 8083
+  port: 8086
   tomcat:
     mbeanregistry:
       enabled: true
@@ -30,15 +30,9 @@ spring:
       acks: all
       retries: 3
 
-  # MongoDB - service's own database (configured via environment variable)
-  data:
-    mongodb:
-      autoconfigure:
-        exclude:
-          - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-          - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+  # MongoDB - shared database with other microservices
   mongodb:
-    uri: ${MONGODB_URI:mongodb://localhost:27017/discussion_db}
+    uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/flow_ops_db}
 
 app:
   events:

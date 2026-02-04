@@ -10,6 +10,7 @@ The system consists of the following services:
 - **Auth Service** (Port 8082) - Authentication and user management
 - **Release Service** (Port 8081) - Release and task workflow management
 - **Notification Service** (Port 8083) - Event-driven notifications
+- **Discussion Service** (Port 8086) - Threaded discussions and comments for releases/tasks
 - **Chatbot Service** (Port 8084) - AI-powered assistant using Ollama (llama3.2:1b)
 - **Ollama** (Port 11434) - Local LLM inference server
 - **MongoDB** (Port 27017) - Primary database
@@ -143,6 +144,9 @@ curl http://localhost:8081/actuator/health
 # Notification Service
 curl http://localhost:8083/actuator/health
 
+# Discussion Service
+curl http://localhost:8086/actuator/health
+
 # Chatbot Service
 curl http://localhost:8084/actuator/health
 ```
@@ -228,6 +232,84 @@ POST http://localhost:8085/api/v1/releases
 # Get release by ID
 GET http://localhost:8085/api/v1/releases/{id}
 ```
+
+### Discussion Endpoints
+
+```bash
+# Get all discussions (without comments, includes commentCount)
+GET http://localhost:8085/api/v1/discussions
+
+# Create a new discussion
+POST http://localhost:8085/api/v1/discussions
+Body: {
+  "title": "Discussion title",
+  "content": "Discussion content",
+  "releaseId": "release-123",
+  "authorId": "user-456",
+  "authorName": "John Doe"
+}
+
+# Get discussion by ID
+GET http://localhost:8085/api/v1/discussions/{discussionId}
+
+# Get discussions by release
+GET http://localhost:8085/api/v1/discussions/release/{releaseId}
+
+# Get discussions by task
+GET http://localhost:8085/api/v1/discussions/task/{taskId}
+
+# Resolve a discussion
+POST http://localhost:8085/api/v1/discussions/{discussionId}/resolve
+Header: X-User-Id: user-123
+
+# Add a top-level comment to a discussion
+POST http://localhost:8085/api/v1/discussions/{discussionId}/comments
+Body: {
+  "content": "Comment text",
+  "authorId": "user-789",
+  "authorName": "Jane Doe"
+}
+
+# Reply to an existing comment (nested/threaded - like Reddit)
+POST http://localhost:8085/api/v1/discussions/{discussionId}/comments
+Body: {
+  "content": "Reply text",
+  "authorId": "user-789",
+  "authorName": "Jane Doe",
+  "parentId": "parent-comment-id"
+}
+
+# Alternative: Reply to a comment using path parameter
+POST http://localhost:8085/api/v1/discussions/{discussionId}/comments/{commentId}/replies
+Body: {
+  "content": "Reply text",
+  "authorId": "user-789",
+  "authorName": "Jane Doe"
+}
+
+# Get all comments (threaded view with nested replies)
+GET http://localhost:8085/api/v1/discussions/{discussionId}/comments
+
+# Get comments in flat list (no nesting)
+GET http://localhost:8085/api/v1/discussions/{discussionId}/comments/flat
+
+# Get replies for a specific comment
+GET http://localhost:8085/api/v1/discussions/{discussionId}/comments/{commentId}/replies
+
+# Get a specific comment
+GET http://localhost:8085/api/v1/discussions/{discussionId}/comments/{commentId}
+
+# Delete a comment (soft-delete if has replies, hard-delete otherwise)
+DELETE http://localhost:8085/api/v1/discussions/{discussionId}/comments/{commentId}
+Header: X-User-Id: user-123
+```
+
+**Nested Comments Behavior:**
+- Comments support unlimited nesting depth (up to 10 levels)
+- Deleting a comment with replies performs a soft-delete (content becomes `[deleted]`)
+- Deleting a comment without replies removes it completely
+- Each comment includes a `depth` field (0 for top-level)
+- Each comment includes a `replies` array containing nested responses
 
 ### Chatbot Endpoints
 

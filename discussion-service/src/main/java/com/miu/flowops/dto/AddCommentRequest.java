@@ -12,4 +12,6 @@ import lombok.NoArgsConstructor;
 public class AddCommentRequest {
     private String content;
     private String authorId;
+    private String authorName;
+    private String parentId;  // Optional: ID of parent comment for replies (null for top-level)
 }

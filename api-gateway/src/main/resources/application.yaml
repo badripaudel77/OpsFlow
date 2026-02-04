@@ -40,6 +40,13 @@ spring:
                 - Path=/api/v1/chat/**
               filters:
                 - StripPrefix=2
+
+            - id: discussion-service
+              uri: ${DISCUSSION_SERVICE_URL:http://localhost:8086}
+              predicates:
+                - Path=/api/v1/discussions/**
+              filters:
+                - StripPrefix=2
 opsflow:
   JWT_SECRET: ${JWT_SECRET:PASS_YOUR_SECRET_KEY_HERE}
 
