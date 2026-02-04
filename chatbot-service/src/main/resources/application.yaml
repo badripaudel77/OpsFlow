@@ -6,19 +6,19 @@ spring:
     name: chatbot-service
 
   mongodb:
-    uri: ${SPRING_DATA_MONGODB_URI:mongodb://mongodb:27017/flow_ops_db}
+    uri: mongodb://127.0.0.1:27017/flow_ops_db
 
 ollama:
-  base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
-  model: ${OLLAMA_MODEL:llama3.2:1b}
-  timeout: ${OLLAMA_TIMEOUT:120000} # 120 seconds - LLM cold starts can be slow
+  base-url: http://localhost:11434
+  model: llama3.2:1b
+  timeout: 30000 # 30 seconds
   retry:
-    max-attempts: ${OLLAMA_MAX_RETRIES:2}
-    delay: 2000 # 2 seconds between retries
+    max-attempts: 2
+    delay: 1000 # 1 second
 
 chat:
   context:
-    max-messages: ${CHAT_CONTEXT_MAX_MESSAGES:5} # Last N messages for context
+    max-messages: 5 # Last N messages for context
 
 logging:
   level:

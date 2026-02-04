@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,22 +20,21 @@ public class ChatController {
     
     private final ChatService chatService;
     
-    @PostMapping(value = "/session", consumes = {"application/json", "application/*+json", "*/*"})
+    @PostMapping("/session")
     public ResponseEntity<SessionResponse> createSession(
-            @RequestHeader("X-User-Id") String userId,
-            @RequestBody(required = false) CreateSessionRequest request) {
+            @Valid @RequestBody CreateSessionRequest request,
+            Authentication authentication) {
         
+        String userId = authentication.getName();
         log.info("Creating session for user: {}", userId);
         
-        String title = request != null ? request.getTitle() : null;
-        SessionResponse response = chatService.createSession(userId, title);
+        SessionResponse response = chatService.createSession(userId, request.getTitle());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
     @GetMapping("/sessions")
-    public ResponseEntity<List<SessionResponse>> getUserSessions(
-            @RequestHeader("X-User-Id") String userId) {
-        
+    public ResponseEntity<List<SessionResponse>> getUserSessions(Authentication authentication) {
+        String userId = authentication.getName();
         log.info("Fetching sessions for user: {}", userId);
         
         List<SessionResponse> sessions = chatService.getUserSessions(userId);
@@ -44,9 +44,10 @@ public class ChatController {
     @PostMapping("/{sessionId}/message")
     public ResponseEntity<MessageResponse> sendMessage(
             @PathVariable String sessionId,
-            @RequestHeader("X-User-Id") String userId,
-            @Valid @RequestBody SendMessageRequest request) {
+            @Valid @RequestBody SendMessageRequest request,
+            Authentication authentication) {
         
+        String userId = authentication.getName();
         log.info("User {} sending message to session: {}", userId, sessionId);
         
         MessageResponse response = chatService.sendMessage(sessionId, userId, request.getMessage());
@@ -56,10 +57,11 @@ public class ChatController {
     @GetMapping("/{sessionId}/history")
     public ResponseEntity<ChatHistoryResponse> getChatHistory(
             @PathVariable String sessionId,
-            @RequestHeader("X-User-Id") String userId,
             @RequestParam(defaultValue = "50") int limit,
-            @RequestParam(defaultValue = "0") int offset) {
+            @RequestParam(defaultValue = "0") int offset,
+            Authentication authentication) {
         
+        String userId = authentication.getName();
         log.info("User {} fetching history for session: {}", userId, sessionId);
         
         ChatHistoryResponse response = chatService.getChatHistory(sessionId, userId, limit, offset);

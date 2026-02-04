@@ -55,7 +55,7 @@ public class AuthController {
         if (!passwordEncoder.matches(request.password(), user.getPassword()))
             throw new RuntimeException("Invalid password");
 
-        String token = jwtUtil.generateAccessToken(user.getId(), user.getUsername(),
+        String token = jwtUtil.generateAccessToken(user.getUsername(),
                 user.getRoles().stream().map(Enum::name).collect(Collectors.toSet()));
 
         String primaryRole = user.getRoles().stream().findFirst().get().name();

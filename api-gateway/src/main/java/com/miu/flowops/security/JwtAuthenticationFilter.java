@@ -7,7 +7,6 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -59,54 +57,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Extract username and roles
             String username = claims.getSubject();
-            String userId = claims.get("userId", String.class);
             String roles = claims.get("roles", String.class);
 
-            log.info("JWT validated for user: {} (userId: {})", username, userId);
+            // Forward as headers to downstream services(like release-service, notification-service)
+            request.setAttribute("X-User", username);
+            request.setAttribute("X-Roles", roles);
 
-            // Wrap request to add headers that will be forwarded to downstream services
-            HttpServletRequestWrapper wrappedRequest = new HttpServletRequestWrapper(request) {
-                @Override
-                public String getHeader(String name) {
-                    if ("X-User-Id".equals(name)) {
-                        return userId;
-                    } else if ("X-Username".equals(name)) {
-                        return username;
-                    } else if ("X-User-Roles".equals(name)) {
-                        return roles;
-                    }
-                    return super.getHeader(name);
-                }
-
-                @Override
-                public Enumeration<String> getHeaderNames() {
-                    List<String> names = Collections.list(super.getHeaderNames());
-                    names.add("X-User-Id");
-                    names.add("X-Username");
-                    names.add("X-User-Roles");
-                    return Collections.enumeration(names);
-                }
-
-                @Override
-                public Enumeration<String> getHeaders(String name) {
-                    if ("X-User-Id".equals(name)) {
-                        return Collections.enumeration(Collections.singletonList(userId));
-                    } else if ("X-Username".equals(name)) {
-                        return Collections.enumeration(Collections.singletonList(username));
-                    } else if ("X-User-Roles".equals(name)) {
-                        return Collections.enumeration(Collections.singletonList(roles));
-                    }
-                    return super.getHeaders(name);
-                }
-            };
-
-            // Continue filter chain with wrapped request
-            filterChain.doFilter(wrappedRequest, response);
         }
         catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid or expired token");
-            log.error("JWT validation failed: {}", e.getMessage());
+            log.error("Something went wrong in filter chain with message : {}", e.getMessage());
+            return;
         }
+        // Continue filter chain
+        filterChain.doFilter(request, response);
     }
 }
