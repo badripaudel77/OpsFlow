@@ -19,8 +19,12 @@ The system consists of the following services:
 - **Grafana** (Port 3000) - Monitoring dashboards
 - **Mongo Express** (Port 8888) - Web interface to interact with the Mongo DB
 
-## Architecture
 
+## Architecture
+###### High Level Workflow
+![High_Level_Workflow](_documents/High_Level_Workflow.png)
+
+###### Detailed Architecture
 ![Architecture](_documents/Archtecture.png)
 
 ## Entities
