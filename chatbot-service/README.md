@@ -59,21 +59,6 @@ docker exec -it ollama ollama pull llama3.2:1b
 curl http://localhost:8085/api/v1/chat/actuator/health
 ```
 
-### Local Development
-
-```bash
-# Start MongoDB locally
-docker run -d -p 27017:27017 --name mongodb mongo:7.0
-
-# Start Ollama locally
-docker run -d -p 11434:11434 --name ollama ollama/ollama:latest
-docker exec -it ollama ollama pull llama3.2:1b
-
-# Run the application
-cd chatbot-service
-./mvnw spring-boot:run
-```
-
 ## 🔌 API Endpoints
 
 All endpoints are accessible through the API Gateway at `http://localhost:8085/api/v1/chat`
@@ -112,7 +97,7 @@ curl -X POST http://localhost:8085/api/v1/chat/session \
 
 Send a message to the chatbot and get a response.
 
-**Request:**
+**Sample Request:**
 
 ```bash
 curl -X POST http://localhost:8085/api/v1/chat/65f8a1b2c3d4e5f6g7h8i9j0/message \
@@ -122,7 +107,7 @@ curl -X POST http://localhost:8085/api/v1/chat/65f8a1b2c3d4e5f6g7h8i9j0/message 
   }'
 ```
 
-**Response:**
+**Sample Response:**
 
 ```json
 {
