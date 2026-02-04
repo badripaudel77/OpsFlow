@@ -23,7 +23,7 @@ The system consists of the following services:
 
 ## Architecture
 ###### High Level Workflow
-![High_Level_Workflow](_documents/HighLevel_Design_Workflow.png)
+![High_Level_Workflow](_documents/HighLevel_Design_Workflow_OpsFlow.png)
 
 ###### Detailed Architecture
 ![Architecture](_documents/Archtecture.png)
