@@ -24,8 +24,7 @@ public class TaskSchedulerService {
     private final UserRepository userRepository;
     private final KafkaProducerService kafkaProducerService;
 
-    // @Scheduled(fixedRate = 3600000) // Run every hour
-    @Scheduled(fixedRate = 60_000) // Run every min
+    @Scheduled(fixedRate = 1000 * 60 * 60 * 24)
     public void checkStaleTasks() {
         log.info("Running scheduler to detect stale tasks with IN_PROCESS status for more than 48 hours");
         LocalDateTime threshold = LocalDateTime.now().minusHours(48);
