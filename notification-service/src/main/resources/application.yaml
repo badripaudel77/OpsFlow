@@ -27,9 +27,6 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
 
       properties:
-#        TODO: check these later
-#        spring.json.trusted.packages: com.miu.flowops
-#        spring.json.value.default.type: com.miu.flowops
         enable.idempotence: true
         max.in.flight.requests.per.connection: 5
 
@@ -54,4 +51,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, beans, info, metrics, mappings, prometheus, threaddump
+        include: health, info, info, metrics, prometheus, threaddump
+  metrics:
+    tags:
+      application: notification-service

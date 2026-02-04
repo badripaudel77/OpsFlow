@@ -30,4 +30,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics, prometheus
+        include: health, info, info, metrics, prometheus, threaddump
+  metrics:
+    tags:
+      application: chatbot-service

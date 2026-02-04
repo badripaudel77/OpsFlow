@@ -51,4 +51,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, beans, info, metrics, mappings, prometheus, threaddump
+        include: health, info, info, metrics, prometheus, threaddump
+  metrics:
+    tags:
+      application: discussion-service
