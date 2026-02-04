@@ -17,6 +17,7 @@ The system consists of the following services:
 - **Kafka UI** (Port 8080) - Kafka management interface
 - **Prometheus** (Port 9090) - Metrics collection
 - **Grafana** (Port 3000) - Monitoring dashboards
+- **Mongo Express** (Port 8888) - Web interface to interact with the Mongo DB
 
 ## Architecture
 
