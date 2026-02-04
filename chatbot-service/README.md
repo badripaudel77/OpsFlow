@@ -63,20 +63,30 @@ curl http://localhost:8085/api/v1/chat/actuator/health
 
 All endpoints are accessible through the API Gateway at `http://localhost:8085/api/v1/chat`
 
+**Authentication Required:** All requests must include a valid JWT token in the Authorization header.
+
+```bash
+# Login first to get JWT token
+TOKEN=$(curl -s -X POST http://localhost:8085/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "john.doe", "password": "password123"}' \
+  | jq -r '.token')
+```
+
 ### 1. Create Chat Session
 
 **POST** `/chat/session`
 
-Create a new chat session for a user.
+Create a new chat session for the authenticated user. User ID is automatically extracted from JWT.
 
 **Request:**
 
 ```bash
 curl -X POST http://localhost:8085/api/v1/chat/session \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "userId": "user-123",
-    "releaseId": "release-456"
+    "title": "Q1 2026 Release Discussion"
   }'
 ```
 
@@ -86,7 +96,7 @@ curl -X POST http://localhost:8085/api/v1/chat/session \
 {
   "sessionId": "65f8a1b2c3d4e5f6g7h8i9j0",
   "userId": "user-123",
-  "releaseId": "release-456",
+  "title": "Q1 2026 Release Discussion",
   "createdAt": "2026-02-02T10:30:00Z"
 }
 ```
@@ -95,12 +105,13 @@ curl -X POST http://localhost:8085/api/v1/chat/session \
 
 **POST** `/chat/{sessionId}/message`
 
-Send a message to the chatbot and get a response.
+Send a message to the chatbot and get a response. Session ownership is automatically verified.
 
 **Sample Request:**
 
 ```bash
 curl -X POST http://localhost:8085/api/v1/chat/65f8a1b2c3d4e5f6g7h8i9j0/message \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "message": "What are the pending tasks in this release?"
@@ -121,12 +132,13 @@ curl -X POST http://localhost:8085/api/v1/chat/65f8a1b2c3d4e5f6g7h8i9j0/message 
 
 **GET** `/chat/{sessionId}/history`
 
-Retrieve the complete conversation history for a session.
+Retrieve the complete conversation history for a session. Only accessible to the session owner.
 
 **Request:**
 
 ```bash
-curl http://localhost:8085/api/v1/chat/65f8a1b2c3d4e5f6g7h8i9j0/history
+curl "http://localhost:8085/api/v1/chat/65f8a1b2c3d4e5f6g7h8i9j0/history?limit=50&offset=0" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 **Response:**
@@ -152,14 +164,15 @@ curl http://localhost:8085/api/v1/chat/65f8a1b2c3d4e5f6g7h8i9j0/history
 
 ### 4. Get User Sessions
 
-**GET** `/chat/sessions?userId={userId}`
+`
 
-List all chat sessions for a user.
+List all chat sessions for the authenticated user. User ID is automatically extracted from JWT.
 
 **Request:**
 
 ```bash
-curl "http://localhost:8085/api/v1/chat/sessions?userId=user-123"
+curl http://localhost:8085/api/v1/chat/sessions \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 **Response:**
@@ -170,6 +183,7 @@ curl "http://localhost:8085/api/v1/chat/sessions?userId=user-123"
   "sessions": [
     {
       "sessionId": "65f8a1b2c3d4e5f6g7h8i9j0",
+      "title": "Q1 2026 Release Discussion4e5f6g7h8i9j0",
       "releaseId": "release-456",
       "createdAt": "2026-02-02T10:30:00Z",
       "lastActivity": "2026-02-02T10:31:05Z"
@@ -180,34 +194,69 @@ curl "http://localhost:8085/api/v1/chat/sessions?userId=user-123"
 
 ## 🧪 Testing Guide
 
+Prerequisites: Get JWT Token
+
+All test scenarios require authentication. First, register and login:
+
+```bash
+# Register a new user
+curl -X POST http://localhost:8085/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "test-user",
+    "email": "test@example.com",
+    "password": "Password123!",
+    "roles": ["USER"]
+  }'
+
+# Login and save token
+TOKEN=$(curl -s -X POST http://localhost:8085/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "test-user", "password": "Password123!"}' \
+  | jq -r '.token')
+
+echo "Token: $TOKEN"
+```
+
 ### Test Scenario 1: Basic Conversation
 
 ```bash
-# Step 1: Create a session
+# Step 1: Create a session (no userId needed - extracted from JWT)
 SESSION_RESPONSE=$(curl -s -X POST http://localhost:8085/api/v1/chat/session \
+  -H "Authorization: Bearer $TOKEN" \authenticated user
+curl -X POST http://localhost:8085/api/v1/chat/session \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"userId": "test-user", "releaseId": "release-001"}')
+  -d '{"title": "Release Planning"}'
 
-SESSION_ID=$(echo $SESSION_RESPONSE | jq -r '.sessionId')
-echo "Created session: $SESSION_ID"
-
-# Step 2: Ask a question
-curl -X POST http://localhost:8085/api/v1/chat/$SESSION_ID/message \
+curl -X POST http://localhost:8085/api/v1/chat/session \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
+  -d '{"title": "Bug Tracking"}'
+
+# List all my sessions
+curl http://localhost:8085/api/v1/chat/sessions \
+  -H "Authorization: Bearer $TOKEN
   -d '{"message": "What is this release about?"}'
 
 # Step 3: Follow-up question
 curl -X POST http://localhost:8085/api/v1/chat/$SESSION_ID/message \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"message": "Are there any high priority tasks?"}'
+Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Show me all tasks assigned to John"}'
 
-# Step 4: View conversation history
-curl http://localhost:8085/api/v1/chat/$SESSION_ID/history | jq '.'
-```
+# Release status queries
+curl -X POST http://localhost:8085/api/v1/chat/$SESSION_ID/message \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What is the current status of this release?"}'
 
-### Test Scenario 2: Multiple Sessions
-
-```bash
+# General help
+curl -X POST http://localhost:8085/api/v1/chat/$SESSION_ID/message \
+  -H "Authorization: Bearer $TOKEN"
 # Create multiple sessions for the same user
 curl -X POST http://localhost:8085/api/v1/chat/session \
   -H "Content-Type: application/json" \
@@ -240,19 +289,23 @@ curl -X POST http://localhost:8085/api/v1/chat/$SESSION_ID/message \
 # General help
 curl -X POST http://localhost:8085/api/v1/chat/$SESSION_ID/message \
   -H "Content-Type: application/json" \
-  -d '{"message": "What can you help me with?"}'
-```
+  -d '{"message": "/missing token
+curl -X POST http://localhost:8085/api/v1/chat/session \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Test"}'
 
-### Test Scenario 4: Error Handling
+# Expected: 401 Unauthorized (from API Gateway)
 
-```bash
 # Test with invalid session ID
 curl -X POST http://localhost:8085/api/v1/chat/invalid-session-id/message \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"message": "Hello"}'
 
-# Expected: 404 Not Found
+# Expected: 404 Not Found or 403 Forbidden
 
+# Test accessing another user's session
+# (Create session with one user, try to access with another)
 # Test with empty message
 curl -X POST http://localhost:8085/api/v1/chat/$SESSION_ID/message \
   -H "Content-Type: application/json" \
@@ -395,13 +448,26 @@ docker exec -it mongodb mongosh --eval "db.adminCommand('ping')"
 
 The chatbot can help with:
 
-- **Task Information**: "What tasks are assigned to me?", "Show pending tasks"
-- **Release Status**: "What's the status of this release?", "When is the deployment?"
-- **Task Details**: "Tell me about task X", "What's blocking this task?"
-- **General Help**: "What can you help me with?", "Explain this release"
+- **Task Information**: "WhaJWT authentication with gateway-level validation:
 
-## 🔐 Security
+- **API Gateway**: Validates JWT token, extracts user information, passes via headers
+- **Chatbot Service**: Reads user ID from `X-User-Id` header (trusted internal communication)
+- **Session Isolation**: Each user can only access their own chat sessions
+- **Ownership Verification**: All operations verify session belongs to the authenticated user
+- **Stateless**: No session state stored in service, all context from MongoDB
 
+**Security Flow:**
+
+```
+1. User logs in → Receives JWT token
+2. Request with JWT → API Gateway validates
+3. Gateway extracts userId from JWT
+4. Gateway adds X-User-Id header
+5. Chatbot reads header → Verifies session ownership
+6. Response returned to user
+```
+
+**Note**: Services within the Docker network trust headers from the API Gateway. External access is only possible through the gateway
 Current implementation uses simplified JWT authentication:
 
 - Stateless session management
