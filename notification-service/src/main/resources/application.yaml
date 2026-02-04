@@ -1,28 +1,35 @@
 server:
   port: 8082
-  tomcat:
-    mbeanregistry:
-      enabled: true
 
 spring:
+  mail:
+    host: smtp.gmail.com
+    port: 465
+    username: ${MAIL_USERNAME:fairfree.app@gmail.com}
+    password: ${MAIL_PASSWORD:bwlynuqomhlkesep}
+    protocol: smtps
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtps.ssl.trust: smtp.gmail.com
+
   application:
     name: FlowOps
   kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: localhost:9094
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
     consumer:
-      group-id: user-event-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
 
       properties:
-        # TODO Change later
-        spring.json.trusted.packages: com.miu.flowops
-        spring.json.value.default.type: com.miu.flowops
+#        TODO: check these later
+#        spring.json.trusted.packages: com.miu.flowops
+#        spring.json.value.default.type: com.miu.flowops
         enable.idempotence: true
         max.in.flight.requests.per.connection: 5
 
@@ -38,17 +45,11 @@ spring:
   mongodb:
     uri: mongodb://127.0.0.1:27017/flow_ops
 
-# TODO change later
-app:
-  events:
-    topic: test_topic
 
 logging:
   level:
     root: info
 
-# Actuator / prometheus settings
-# Doc : https://docs.spring.io/spring-boot/docs/2.5.6/reference/html/actuator.html
 management:
   endpoints:
     web:
