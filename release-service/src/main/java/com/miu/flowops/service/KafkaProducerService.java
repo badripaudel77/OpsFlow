@@ -18,7 +18,7 @@ public class KafkaProducerService {
     private static final String TOPIC_TASK_ASSIGNED = "task-assigned-topic";
     private static final String TOPIC_TASK_COMPLETED = "task-completed-topic";
     private static final String TOPIC_HOTFIX_ADDED = "hotfix-task-added-topic";
-    private static final String TOPIC_STALE_TASK_DETECTED = "stale-task-detected-topic";
+    private static final String TOPIC_STALE_TASK_REMINDER = "stale-task-reminder-topic";
 
     public void sendTaskAssignedEvent(TaskAssignedEvent event) {
         log.info("Publishing TaskAssignedEvent: {}", event);
@@ -37,6 +37,6 @@ public class KafkaProducerService {
 
     public void sendStaleTaskDetectedEvent(StaleTaskDetectedEvent event) {
         log.info("Publishing StaleTaskDetectedEvent: {}", event);
-        kafkaTemplate.send(TOPIC_STALE_TASK_DETECTED, event);
+        kafkaTemplate.send(TOPIC_STALE_TASK_REMINDER, event);
     }
 }

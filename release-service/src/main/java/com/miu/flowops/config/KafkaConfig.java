@@ -13,6 +13,7 @@ public class KafkaConfig {
     private static final String TOPIC_TASK_ASSIGNED = "task-assigned-topic";
     private static final String TOPIC_TASK_COMPLETED = "task-completed-topic";
     private static final String TOPIC_HOTFIX_ADDED = "hotfix-task-added-topic";
+    private static final String TOPIC_STALE_TASK_REMINDER = "stale-task-reminder-topic";
 
     @Bean
     public NewTopic taskAssignedTopic() {
@@ -30,6 +31,12 @@ public class KafkaConfig {
     public NewTopic taskHotFixAddedTopic() {
         log.debug("Creating TOPIC : {} ", TOPIC_HOTFIX_ADDED);
         return new NewTopic(TOPIC_HOTFIX_ADDED, 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic staleTaskDetectedTopic() {
+        log.debug("Creating TOPIC : {} ", TOPIC_STALE_TASK_REMINDER);
+        return new NewTopic(TOPIC_STALE_TASK_REMINDER, 1, (short) 1);
     }
 
 }
