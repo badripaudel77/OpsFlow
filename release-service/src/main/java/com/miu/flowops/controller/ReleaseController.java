@@ -1,5 +1,6 @@
 package com.miu.flowops.controller;
 
+import com.miu.flowops.exceptions.BadRequestException;
 import com.miu.flowops.model.Release;
 import com.miu.flowops.model.Task;
 import com.miu.flowops.service.impl.ReleaseService;
@@ -16,7 +17,10 @@ public class ReleaseController {
     private final ReleaseService releaseService;
 
     @PostMapping
-    public ResponseEntity<Release> createRelease(@RequestBody Release release) {
+    public ResponseEntity<Release> createRelease(@RequestBody Release release, @RequestHeader("X-User-Roles") String roles) {
+        if(!roles.contains("ADMIN")) {
+            throw new BadRequestException("Unauthorized access");
+        }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(releaseService.createRelease(release));
     }
@@ -37,18 +41,28 @@ public class ReleaseController {
 
     @PostMapping("/{releaseId}/hotfix")
     public ResponseEntity<String> addHotfixTask(@PathVariable String releaseId,
-                                                @RequestBody Task task) {
+                                                @RequestBody Task task,
+                                                @RequestHeader("X-User-Roles") String roles) {
+        if(!roles.contains("ADMIN")) {
+            throw new BadRequestException("Unauthorized access");
+        }
         releaseService.addHotfixTask(releaseId, task);
         return ResponseEntity.ok("Hotfix task added successfully");
     }
 
     @PostMapping("/{releaseId}/complete")
-    public ResponseEntity<Release> completeRelease(@PathVariable String releaseId) {
+    public ResponseEntity<Release> completeRelease(@PathVariable String releaseId, @RequestHeader("X-User-Roles") String roles) {
+        if(!roles.contains("ADMIN")) {
+            throw new BadRequestException("Unauthorized access");
+        }
         return ResponseEntity.ok(releaseService.completeRelease(releaseId));
     }
 
     @DeleteMapping("/{releaseId}")
-    public ResponseEntity<Void> deleteRelease(@PathVariable String releaseId) {
+    public ResponseEntity<Void> deleteRelease(@PathVariable String releaseId, @RequestHeader("X-User-Roles") String roles) {
+        if(!roles.contains("ADMIN")) {
+            throw new BadRequestException("Unauthorized access");
+        }
         releaseService.deleteRelease(releaseId);
         return ResponseEntity.noContent().build();
     }

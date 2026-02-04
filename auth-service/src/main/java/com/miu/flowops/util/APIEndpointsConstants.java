@@ -1,7 +1,6 @@
 package com.miu.flowops.util;
 
 public class APIEndpointsConstants {
-    public static final String ADMIN = "ADMIN";
 
     private APIEndpointsConstants() {
     }
@@ -11,11 +10,6 @@ public class APIEndpointsConstants {
             "/actuator/**",       // Health checks and metrics
             "/v3/api-docs/**",    // API documentation
             "/swagger-ui/**"      // Swagger UI
-    };
-
-    public static final String[] ADMIN_ONLY_ENDPOINTS = {
-            // Auth service doesn't handle releases
-            // Remove this or leave empty
     };
 }
 
