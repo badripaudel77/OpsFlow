@@ -1,6 +1,8 @@
 package com.miu.flowops.controller;
 
 import com.miu.flowops.dto.*;
+import com.miu.flowops.exceptions.BadRequestException;
+import com.miu.flowops.exceptions.ResourceNotFoundException;
 import com.miu.flowops.model.Role;
 import com.miu.flowops.model.User;
 import com.miu.flowops.repository.UserRepository;
@@ -27,11 +29,9 @@ public class AuthController {
 
     @PostMapping("/register")
     public String register(@RequestBody RegisterRequest request) {
-        if (userRepository.existsByUsername(request.username()))
-            return "Username already exists";
-
-        if (userRepository.existsByEmail(request.email()))
-            return "Email already exists";
+        if (userRepository.existsByUsername(request.username()) || userRepository.existsByEmail(request.email())) {
+            throw new BadRequestException("Email or Username already exists");
+        }
 
         User user = User.builder()
                 .username(request.username())
@@ -49,11 +49,13 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthResponse login(@RequestBody LoginRequest request) {
-        User user = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository
+                .findByUsername(request.username())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword()))
-            throw new RuntimeException("Invalid password");
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new BadRequestException("Invalid credentials");
+        }
 
         String token = jwtUtil.generateAccessToken(user.getId(), user.getUsername(),
                 user.getRoles().stream().map(Enum::name).collect(Collectors.toSet()));

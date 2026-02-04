@@ -14,13 +14,11 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
     consumer:
-      group-id: user-event-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
 
       properties:
-        # TODO Change later
         spring.json.trusted.packages: com.miu.flowops
         spring.json.value.default.type: com.miu.flowops
         enable.idempotence: true
@@ -36,12 +34,7 @@ spring:
           - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
           - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
   mongodb:
-    uri: ${SPRING_DATA_MONGODB_URI}
-
-# TODO change later
-app:
-  events:
-    topic: test_topic
+    uri: ${SPRING_DATA_MONGODB_URI:mongodb://127.0.0.1:27017/flow_ops}
 
 logging:
   level:

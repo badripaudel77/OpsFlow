@@ -140,6 +140,7 @@ services:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=${SPRING_KAFKA_BOOTSTRAP_SERVERS}
       - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI:-mongodb://mongodb:27017/flow_ops_db}
       - APP_EVENTS_TOPIC=test_topic
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -165,6 +166,7 @@ services:
       - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI:-mongodb://mongodb:27017/flow_ops_db}
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=${SPRING_KAFKA_BOOTSTRAP_SERVERS}
       - APP_EVENTS_TOPIC=test_topic
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -192,6 +194,7 @@ services:
       - OLLAMA_MODEL=llama3.2:1b
       - OLLAMA_TIMEOUT=120000
       - OLLAMA_MAX_RETRIES=2
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       mongodb:
         condition: service_healthy

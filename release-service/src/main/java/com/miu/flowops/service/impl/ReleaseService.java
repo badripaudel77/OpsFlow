@@ -2,6 +2,8 @@ package com.miu.flowops.service.impl;
 
 import com.miu.flowops.dto.HotfixTaskAddedEvent;
 import com.miu.flowops.dto.TaskAssignedEvent;
+import com.miu.flowops.exceptions.BadRequestException;
+import com.miu.flowops.exceptions.ResourceNotFoundException;
 import com.miu.flowops.model.Release;
 import com.miu.flowops.model.Task;
 import com.miu.flowops.model.TaskStatus;
@@ -11,7 +13,6 @@ import com.miu.flowops.repository.UserRepository;
 import com.miu.flowops.service.IReleaseService;
 import com.miu.flowops.service.KafkaProducerService;
 import lombok.RequiredArgsConstructor;
-import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -28,6 +29,7 @@ public class ReleaseService implements IReleaseService {
 
     @Override
     public Release createRelease(Release release) {
+
         if (release.getTasks() != null && !release.getTasks().isEmpty()) {
             int order = 1;
             for (Task task : release.getTasks()) {
@@ -52,7 +54,7 @@ public class ReleaseService implements IReleaseService {
     @Override
     public Release getRelease(String id) {
         return releaseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Release not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Release not found"));
     }
 
     @Override
@@ -121,11 +123,38 @@ public class ReleaseService implements IReleaseService {
         }
     }
 
+    @Override
+    public Release completeRelease(String releaseId) {
+        Release release = getRelease(releaseId);
+        if (Boolean.TRUE.equals(release.getIsCompleted())) {
+            throw new BadRequestException("Release is already completed");
+        }
+        boolean allTasksDone = release.getTasks() == null ||
+                release.getTasks().isEmpty() ||
+                    release.getTasks().stream()
+                            .allMatch(t -> t.getStatus() == TaskStatus.COMPLETED);
+        if (allTasksDone) {
+            release.setIsCompleted(true);
+            return releaseRepository.save(release);
+        }
+        else {
+            throw new IllegalStateException("Cannot complete release: Not all tasks are completed.");
+        }
+    }
+
+    @Override
+    public void deleteRelease(String releaseId) {
+        if (!releaseRepository.existsById(releaseId)) {
+            throw new ResourceNotFoundException("Release not found");
+        }
+        releaseRepository.deleteById(releaseId);
+    }
+
     protected Task findTask(Release release, String taskId) {
         return release.getTasks().stream()
                 .filter(t -> t.getId().equals(taskId))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Task not found in release"));
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found in release"));
     }
 
     protected void validateSequentialExecution(Release release, Task currentTask) {
@@ -138,7 +167,7 @@ public class ReleaseService implements IReleaseService {
         if (currentIndex > 0) {
             Task previousTask = sortedTasks.get(currentIndex - 1);
             if (previousTask.getStatus() != TaskStatus.COMPLETED) {
-                throw new RuntimeException("Previous task '" + previousTask.getTitle() + "' is not completed.");
+                throw new ResourceNotFoundException("Previous task '" + previousTask.getTitle() + "' is not completed.");
             }
         }
     }

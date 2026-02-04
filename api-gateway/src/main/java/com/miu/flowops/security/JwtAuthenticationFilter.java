@@ -30,7 +30,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-        // skip the public path like /auth
         return Constants.SKIP_FILTER_ENDPOINTS
                 .stream()
                 .anyMatch(path::startsWith);

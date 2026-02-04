@@ -41,4 +41,15 @@ public class ReleaseController {
         releaseService.addHotfixTask(releaseId, task);
         return ResponseEntity.ok("Hotfix task added successfully");
     }
+
+    @PostMapping("/{releaseId}/complete")
+    public ResponseEntity<Release> completeRelease(@PathVariable String releaseId) {
+        return ResponseEntity.ok(releaseService.completeRelease(releaseId));
+    }
+
+    @DeleteMapping("/{releaseId}")
+    public ResponseEntity<Void> deleteRelease(@PathVariable String releaseId) {
+        releaseService.deleteRelease(releaseId);
+        return ResponseEntity.noContent().build();
+    }
 }

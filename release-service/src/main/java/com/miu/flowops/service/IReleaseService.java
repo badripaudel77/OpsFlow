@@ -8,4 +8,6 @@ public interface IReleaseService {
     Release getRelease(String id);
     Task assignDeveloper(String releaseId, String taskId, String developerId);
     void addHotfixTask(String releaseId, Task newTask);
+    Release completeRelease(String releaseId);
+    void deleteRelease(String releaseId);
 }

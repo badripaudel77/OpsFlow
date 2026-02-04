@@ -2,6 +2,8 @@ package com.miu.flowops.service.impl;
 
 import com.miu.flowops.dto.TaskAssignedEvent;
 import com.miu.flowops.dto.TaskCompletedEvent;
+import com.miu.flowops.exceptions.BadRequestException;
+import com.miu.flowops.exceptions.ResourceNotFoundException;
 import com.miu.flowops.model.Release;
 import com.miu.flowops.model.Task;
 import com.miu.flowops.model.TaskStatus;
@@ -11,7 +13,6 @@ import com.miu.flowops.repository.UserRepository;
 import com.miu.flowops.service.ITaskService;
 import com.miu.flowops.service.KafkaProducerService;
 import lombok.RequiredArgsConstructor;
-import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -32,7 +33,7 @@ public class TaskService implements ITaskService {
 
         boolean hasActiveTask = releaseRepository.existsByDeveloperIdAndTaskStatus(developerId, TaskStatus.IN_PROCESS);
         if (hasActiveTask) {
-            throw new RuntimeException("Developer already has an active task in process.");
+            throw new BadRequestException("Developer already has an active task in process.");
         }
 
         Release release = releaseService.getRelease(releaseId);
@@ -40,7 +41,7 @@ public class TaskService implements ITaskService {
 
         // Validate Task State
         if (task.getStatus() != TaskStatus.TODO) {
-            throw new RuntimeException("Task must be in TODO state to start.");
+            throw new BadRequestException("Task must be in TODO state to start.");
         }
         // Sequential Execution Enforcement
         releaseService.validateSequentialExecution(release, task);
@@ -73,11 +74,11 @@ public class TaskService implements ITaskService {
 
         // Validate Task State
         if (task.getStatus() != TaskStatus.IN_PROCESS) {
-            throw new RuntimeException("Task must be IN_PROCESS to complete.");
+            throw new BadRequestException("Task must be IN_PROCESS to complete.");
         }
         // Verify developer
         if (task.getDeveloperId() != null && !task.getDeveloperId().equals(developer.getId())) {
-            throw new RuntimeException("Task is assigned to a different developer.");
+            throw new BadRequestException("Task is assigned to a different developer.");
         }
         // Update Task
         task.setStatus(TaskStatus.COMPLETED);
