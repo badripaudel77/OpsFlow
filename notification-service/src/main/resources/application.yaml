@@ -1,7 +1,10 @@
 server:
-  port: 8082
+  port: 8086
 
 spring:
+  application:
+    name: FlowOps
+
   mail:
     host: smtp.gmail.com
     port: 465
@@ -13,8 +16,6 @@ spring:
       mail.smtp.starttls.enable: true
       mail.smtps.ssl.trust: smtp.gmail.com
 
-  application:
-    name: FlowOps
   kafka:
     bootstrap-servers: localhost:9094
     producer:
@@ -27,6 +28,7 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
 
       properties:
+        spring.json.trusted.packages: com.miu.flowops.dto
         enable.idempotence: true
         max.in.flight.requests.per.connection: 5
 
@@ -42,16 +44,17 @@ spring:
   mongodb:
     uri: mongodb://127.0.0.1:27017/flow_ops
 
-
 logging:
   level:
     root: info
+    org.springframework.kafka: info
 
 management:
   endpoints:
     web:
       exposure:
-        include: health, info, info, metrics, prometheus, threaddump
+        include: health, info, metrics, prometheus, threaddump
+
   metrics:
     tags:
       application: notification-service

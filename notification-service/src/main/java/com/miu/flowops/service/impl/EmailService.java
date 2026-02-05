@@ -2,8 +2,6 @@ package com.miu.flowops.service.impl;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -20,6 +18,11 @@ public class EmailService implements IEmailService {
 
     @Override
     public void sendEmail(String to, String subject, String message) {
+        sendEmail(to, subject, message, null, null, null);
+    }
+
+    @Override
+    public void sendEmail(String to, String subject, String message, String releaseId, String taskId, String developerId) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -27,7 +30,7 @@ public class EmailService implements IEmailService {
             helper.setFrom("noreply@opsflow.com");
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setText(buildHtmlTemplate(subject, message), true); // true = HTML
+            helper.setText(buildHtmlTemplate(subject, message, releaseId, taskId, developerId), true); // true = HTML
 
             mailSender.send(mimeMessage);
         } catch (MessagingException e) {
@@ -35,7 +38,29 @@ public class EmailService implements IEmailService {
         }
     }
 
-    private String buildHtmlTemplate(String subject, String message) {
+    private String buildHtmlTemplate(String subject, String message, String releaseId, String taskId, String developerId) {
+        StringBuilder detailsHtml = new StringBuilder();
+        detailsHtml.append("<div style='margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-left: 4px solid #4A90A4;'>");
+        
+        if (releaseId != null && !releaseId.isEmpty()) {
+            detailsHtml.append("<p style='margin: 5px 0;'><strong>Release ID:</strong> ").append(releaseId).append("</p>");
+        }
+        if (taskId != null && !taskId.isEmpty()) {
+            detailsHtml.append("<p style='margin: 5px 0;'><strong>Task ID:</strong> ").append(taskId).append("</p>");
+        }
+        if (developerId != null && !developerId.isEmpty()) {
+            detailsHtml.append("<p style='margin: 5px 0;'><strong>Developer ID:</strong> ").append(developerId).append("</p>");
+        }
+        detailsHtml.append("</div>");
+
+        // If no details are present, we might want to avoid showing the empty div, but the check is simple enough.
+        // Actually, if all are null, the div will be empty. Let's check if we should append the div at all.
+        boolean hasDetails = (releaseId != null && !releaseId.isEmpty()) || 
+                             (taskId != null && !taskId.isEmpty()) || 
+                             (developerId != null && !developerId.isEmpty());
+        
+        String detailsSection = hasDetails ? detailsHtml.toString() : "";
+
         return "<!DOCTYPE html>" +
                 "<html>" +
                 "<head><meta charset='UTF-8'></head>" +
@@ -46,6 +71,7 @@ public class EmailService implements IEmailService {
                 "</td></tr>" +
                 "<tr><td style='padding:40px 30px;'>" +
                 "<p style='color:#333; font-size:16px; line-height:1.6;'>" + message + "</p>" +
+                detailsSection +
                 "</td></tr>" +
                 "<tr><td style='background-color:#f8f8f8; padding:20px; text-align:center;'>" +
                 "<p style='color:#888; font-size:12px;'>Don't replay to this mail, it is an automated message.</p>" +

@@ -3,13 +3,13 @@ package com.miu.flowops.controller;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.miu.flowops.dto.StaleTaskDetectedEvent;
 import com.miu.flowops.service.impl.EmailService;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import com.miu.flowops.dto.CriticalSystemErrorEvent;
 import com.miu.flowops.dto.HotfixTaskAddedEvent;
-import com.miu.flowops.dto.StaleTaskReminderEvent;
 import com.miu.flowops.dto.TaskAssignedEvent;
 
 import lombok.RequiredArgsConstructor;
@@ -65,8 +65,8 @@ public class TestEventController {
     }
 
     @PostMapping("/stale-reminder")
-    public String triggerStaleReminder(@RequestBody(required = false) StaleTaskReminderEvent event) {
-        StaleTaskReminderEvent toSend = event != null ? event : StaleTaskReminderEvent.builder()
+    public String triggerStaleReminder(@RequestBody(required = false) StaleTaskDetectedEvent event) {
+        StaleTaskDetectedEvent toSend = event != null ? event : StaleTaskDetectedEvent.builder()
                 .developerId("dev-test-123")
                 .taskId("task-test-789")
                 .taskTitle("Test Stale Task")

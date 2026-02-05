@@ -3,12 +3,11 @@ package com.miu.flowops.service;
 import java.time.LocalDateTime;
 
 import com.miu.flowops.dto.CriticalSystemErrorEvent;
+import com.miu.flowops.dto.StaleTaskDetectedEvent;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 import com.miu.flowops.dto.HotfixTaskAddedEvent;
-import com.miu.flowops.dto.StaleTaskReminderEvent;
 import com.miu.flowops.dto.TaskAssignedEvent;
 import com.miu.flowops.model.NotificationLog;
 import com.miu.flowops.repository.NotificationLogRepository;
@@ -23,9 +22,8 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 public class KafkaConsumerService {
 
-    //private final KafkaTemplate<String, Object> kafkaTemplate;
     private static final String TOPIC_TASK_ASSIGNED = "task-assigned-topic";
-    //private static final String TOPIC_TASK_COMPLETED = "task-completed-topic";
+    private static final String TOPIC_TASK_COMPLETED = "task-completed-topic";
     private static final String TOPIC_HOTFIX_ADDED = "hotfix-task-added-topic";
     private static final String TOPIC_STALE_TASK_REMINDER = "stale-task-reminder-topic";
     private static final String TOPIC_CRITICAL_SYSTEM_ERROR = "critical-system-error-topic";
@@ -37,7 +35,7 @@ public class KafkaConsumerService {
 
     // listen ..... and send email
     @KafkaListener(topics = TOPIC_TASK_ASSIGNED, groupId = "task-assigned-group")
-    public void listenTaskAssigned(@Payload TaskAssignedEvent event) {
+    public void listenTaskAssigned(TaskAssignedEvent event) {
         log.info("Received TaskAssignedEvent: {}", event);
 
         String payloadJson;
@@ -58,7 +56,7 @@ public class KafkaConsumerService {
                 .build();
 
         try {
-            emailService.sendEmail(event.getEmail(), "Task Assigned", event.getMessage());
+            emailService.sendEmail(event.getEmail(), "Task Assigned", event.getMessage(), event.getReleaseId(), event.getTaskId(), event.getDeveloperId());
             logEntry.setStatus("SENT");
         } catch (Exception e) {
             logEntry.setStatus("FAILED");
@@ -68,7 +66,7 @@ public class KafkaConsumerService {
     }
 
     @KafkaListener(topics = TOPIC_HOTFIX_ADDED, groupId = "hotfix-added-group")
-    public void listenHotfixAdded(@Payload HotfixTaskAddedEvent event) {
+    public void listenHotfixAdded(HotfixTaskAddedEvent event) {
         log.info("Received HotfixTaskAddedEvent: {}", event);
 
         String payloadJson;
@@ -88,8 +86,7 @@ public class KafkaConsumerService {
                 .build();
 
         try {
-            emailService.sendEmail(event.getEmail(), "Hotfix Task Added", event.getMessage());
-            //TODO: figure out how to get the email and message from the event
+            emailService.sendEmail(event.getEmail(), "Hotfix Task Added", event.getMessage(), event.getReleaseId(), null, event.getDeveloperId());
             logEntry.setStatus("SENT");
         } catch (Exception e) {
             logEntry.setStatus("FAILED");
@@ -99,8 +96,8 @@ public class KafkaConsumerService {
     }
 
     @KafkaListener(topics = TOPIC_STALE_TASK_REMINDER, groupId = "stale-task-reminder-group")
-    public void listenStaleTaskReminder(@Payload StaleTaskReminderEvent event) {
-        log.info("Received StaleTaskReminderEvent: {}", event);
+    public void listenStaleTaskReminder(StaleTaskDetectedEvent event) {
+        log.info("Received StaleTaskDetectedEvent: {}", event);
 
         NotificationLog logEntry = null;
         String payloadJson;
@@ -115,7 +112,7 @@ public class KafkaConsumerService {
                     .status("PENDING")
                     .build();
 
-            emailService.sendEmail(event.getEmail(), "Stale Task Reminder", event.getMessage());
+            emailService.sendEmail(event.getEmail(), "Stale Task Reminder", event.getMessage(), null, event.getTaskId(), event.getDeveloperId());
             logEntry.setStatus("SENT");
         }
         catch (JacksonException e) {
@@ -128,7 +125,7 @@ public class KafkaConsumerService {
     }
 
     @KafkaListener(topics = TOPIC_CRITICAL_SYSTEM_ERROR, groupId = "critical-system-error-group")
-    public void listenCriticalSystemError(@Payload CriticalSystemErrorEvent event) {
+    public void listenCriticalSystemError(CriticalSystemErrorEvent event) {
         log.info("Received CriticalSystemErrorEvent: {}", event);
 
         try {
