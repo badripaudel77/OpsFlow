@@ -7,7 +7,7 @@ A distributed microservices-based release management platform with event-driven 
 ## 👥 Team Members
 
 - **[Badri, Paudel](https://github.com/badripaudel77)** 
-- **[Dawit Fsaha Welegebriel](https://github.com/DawitFsaha)**
+- **[Dawit F Welegebriel](https://github.com/DawitFsaha)**
 - **[Jephthah Kimanthi David](https://github.com/d-kimanthi)**
 - **[Jeffrey Metz](https://github.com/jeffmetz95)**
 
