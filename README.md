@@ -2,6 +2,17 @@
 
 A distributed microservices-based release management platform with event-driven architecture, real-time collaboration, and comprehensive monitoring.
 
+---
+
+## 👥 Team Members
+
+- **[Badri, Paudel](https://github.com/badripaudel77)** 
+- **[Dawit Fsaha Welegebriel](https://github.com/DawitFsaha)**
+- **[Jephthah Kimanthi David](https://github.com/d-kimanthi)**
+- **[Jeffrey Metz](https://github.com/jeffmetz95)**
+
+---
+
 ## 🏗️ Architecture
 
 The system consists of the following services:
