@@ -6,8 +6,8 @@ A distributed microservices-based release management platform with event-driven 
 
 ## 👥 Contributors
 
-- **[Badri, Paudel](https://github.com/badripaudel77)** 
-- **[Dawit F Welegebriel](https://github.com/DawitFsaha)**
+- **[Badri, Paudel](https://github.com/badripaudel77)**
+- **[Dawit Welegebriel](https://github.com/DawitFsaha)**
 - **[David Kimanthi](https://github.com/d-kimanthi)**
 - **[Jeffrey Metz](https://github.com/jeffmetz95)**
 
@@ -31,12 +31,14 @@ The system consists of the following services:
 - **Grafana** (Port 3000) - Monitoring dashboards
 - **Mongo Express** (Port 8888) - Web interface to interact with the Mongo DB
 
-
 ## Architecture
+
 ###### High Level Workflow
+
 ![High_Level_Workflow](_documents/HighLevel_Design_Workflow_OpsFlow.png)
 
 ###### Detailed Architecture
+
 ![Architecture](_documents/Archtecture.png)
 
 ## Entities
@@ -316,6 +318,7 @@ Header: X-User-Id: user-123
 ```
 
 **Nested Comments Behavior:**
+
 - Comments support unlimited nesting depth (up to 10 levels)
 - Deleting a comment with replies performs a soft-delete (content becomes `[deleted]`)
 - Deleting a comment without replies removes it completely
