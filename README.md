@@ -351,7 +351,7 @@ GET http://localhost:8085/api/v1/chat/sessions?userId={userId}
 ### MongoDB Interaction
 
 ```bash
-# Connect to MongoDB container
+# Connect to MongoDB
 docker exec -it mongodb mongosh
 
 # Inside mongosh:
